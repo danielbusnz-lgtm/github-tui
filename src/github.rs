@@ -1,14 +1,14 @@
 use serde::Deserialize;
 
-#[derive(Deserialize)]
-struct User {
-    login: String,
-    bio: Option<String>,
-    public_repos: u32,
-    followers: u32,
+#[derive(Deserialize, Clone)]
+pub struct User {
+    pub login: String,
+    pub bio: Option<String>,
+    pub public_repos: u32,
+    pub followers: u32,
 }
 
-async fn get_user(token: &str) -> Result<User, reqwest::Error> {
+pub async fn get_user(token: &str) -> Result<User, reqwest::Error> {
     let client = reqwest::Client::new();
 
     let response = client.get("https://api.github.com/user")
@@ -22,22 +22,20 @@ async fn get_user(token: &str) -> Result<User, reqwest::Error> {
     Ok(response)
 }
 
-
-
-#[derive(Deserialize)]
-struct Repo{
-    name: String,
-    description: Option<String>,
-    stargazers_count: u32,
-    language:Option<String>,
+#[derive(Deserialize, Clone)]
+pub struct Repo {
+    pub name: String,
+    pub description: Option<String>,
+    pub stargazers_count: u32,
+    pub language: Option<String>,
 }
 
-async fn get_repos(token: &str) -> Result<Vec<Repo>, reqwest::Error>{
+pub async fn get_repos(token: &str) -> Result<Vec<Repo>, reqwest::Error> {
     let client = reqwest::Client::new();
 
     let response = client.get("https://api.github.com/user/repos?per_page=100&sort=updated")
         .header("Authorization", format!("Bearer {}", token))
-        .header("User-Agent","github-tui")
+        .header("User-Agent", "github-tui")
         .send()
         .await?
         .json::<Vec<Repo>>()
@@ -46,20 +44,21 @@ async fn get_repos(token: &str) -> Result<Vec<Repo>, reqwest::Error>{
     Ok(response)
 }
 
-#[derive(Deserialize)]
-struct RepoContent{
-    name: String,
-    #[serde(rename = "type")]  
-    content_type: String,
-    path: String,
-   }
-async fn get_repos_content(token: &str, owner: &str, repo: &str, path: &str) -> Result<Vec<RepoContent>, reqwest::Error>{
+#[derive(Deserialize, Clone)]
+pub struct RepoContent {
+    pub name: String,
+    #[serde(rename = "type")]
+    pub content_type: String,
+    pub path: String,
+}
+
+pub async fn get_repos_content(token: &str, owner: &str, repo: &str, path: &str) -> Result<Vec<RepoContent>, reqwest::Error> {
     let client = reqwest::Client::new();
     let url = format!("https://api.github.com/repos/{}/{}/contents/{}", owner, repo, path);
 
-    let response = client.get(url)
+    let response = client.get(&url)
         .header("Authorization", format!("Bearer {}", token))
-        .header("User-Agent","github-tui")
+        .header("User-Agent", "github-tui")
         .send()
         .await?
         .json::<Vec<RepoContent>>()
